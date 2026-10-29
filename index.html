@@ -540,10 +540,81 @@
       <div class="spinner" id="spinner"></div>
       <div class="emscripten" id="status">Downloading...</div>
 
-      <progress value="0" max="100" id="progress" hidden="1"></progress>
+      <!-- We un-hid this progress bar so it displays on-screen -->
+      <progress value="0" max="100" id="progress" style="width: 100%; height: 20px; margin-top: 10px;"></progress>
       <img id="QRCode" class="qrCode" src="runner.svg" alt="URL QR Code" hidden="1"></img>
       <img id="QR2Code" class="qrCode" src="runnerLocal.svg" alt="URL QR2 Code" hidden="1"></img>
     </div>
+
+    <script type="text/javascript">
+      (function () {
+        // Corrected domain structure: raw.githubusercontent.com
+        const ASSET_BASE = `https://raw.githubusercontent.com/TwinkleBottom/frickbears3portpersonal/main/`;
+        const SPLIT_SPEC = [["game.unx", 2], ["music.dat", 5], ["voicelines_ingame.dat", 2]];
+        const SPLITS = Object.fromEntries(SPLIT_SPEC);
+        const ALIASES = { "game.unc": "game.unx" };
+
+        const statusElement = document.getElementById('status');
+        const progressElement = document.getElementById('progress');
+
+        // Tracking progress across multiple split files
+        let totalFilesToDownload = 0;
+        let filesDownloaded = 0;
+        
+        // Calculate total part files to process
+        SPLIT_SPEC.forEach(([filename, parts]) => {
+          totalFilesToDownload += parts;
+        });
+
+        function updateOverallProgress() {
+          if (totalFilesToDownload > 0) {
+            const percent = (filesDownloaded / totalFilesToDownload) * 100;
+            progressElement.value = percent;
+            statusElement.textContent = `Downloading assets... (${filesDownloaded}/${totalFilesToDownload} chunks)`;
+          }
+        }
+
+        // Example download function tracking your chunk pieces
+        function downloadChunk(url) {
+          const xhr = new XMLHttpRequest();
+          xhr.open('GET', url, true);
+          
+          xhr.onload = function() {
+            if (xhr.status === 200) {
+              filesDownloaded++;
+              updateOverallProgress();
+              
+              if (filesDownloaded === totalFilesToDownload) {
+                statusElement.textContent = "All assets loaded! Starting engine...";
+                // Your existing code to combine files and boot Emscripten goes here
+              }
+            } else {
+              statusElement.textContent = `Failed to load a chunk: ${xhr.status}`;
+            }
+          };
+
+          xhr.onerror = function() {
+            statusElement.textContent = "Network error trying to fetch split files.";
+          };
+
+          xhr.send();
+        }
+
+        // Proactively begin queueing your file downloads across your splits array
+        // (Uncomment or integrate this loop with your actual buffer builder)
+        /*
+        SPLIT_SPEC.forEach(([filename, parts]) => {
+          for (let i = 1; i <= parts; i++) {
+            // Pads numbers to match 'music.dat01', 'music.dat02'
+            const chunkId = String(i).padStart(2, '0'); 
+            downloadChunk(`${ASSET_BASE}${filename}${chunkId}`);
+          }
+        });
+        */
+
+      })();
+    </script>
+
 
     <div class="floating-control" id="multiplayer-stats-container">
       <div class="multiplayer-stats-network" id="multiplayer-stats-network">
