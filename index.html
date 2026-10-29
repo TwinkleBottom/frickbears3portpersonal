@@ -2,28 +2,6 @@
 <html lang="en-us">
 
   <head>
-	  <script>
-  (function() {
-    const consoleDiv = document.getElementById('custom-screen-console');
-    const originalFetch = window.fetch;
-    
-    window.fetch = async function(...args) {
-      const url = args[0];
-      try {
-        const response = await originalFetch.apply(this, args);
-        return response;
-      } catch (error) {
-        const entry = document.createElement('div');
-        entry.className = 'log-entry log-error';
-        entry.textContent = `[FETCH FAILED] Network error trying to reach: ${url}`;
-        consoleDiv.appendChild(entry);
-        consoleDiv.scrollTop = consoleDiv.scrollHeight;
-        throw error;
-      }
-    };
-  })();
-</script>
-
 	  <div id="custom-screen-console"><strong>On-Screen Console (Waiting for logs...)</strong><br></div>
 
 <script>
@@ -92,6 +70,27 @@
   .log-error { color: #ff5555; font-weight: bold; }
   .log-warn { color: #ffaa00; }
 </style>
+	  	  <script>
+  (function() {
+    const consoleDiv = document.getElementById('custom-screen-console');
+    const originalFetch = window.fetch;
+    
+    window.fetch = async function(...args) {
+      const url = args[0];
+      try {
+        const response = await originalFetch.apply(this, args);
+        return response;
+      } catch (error) {
+        const entry = document.createElement('div');
+        entry.className = 'log-entry log-error';
+        entry.textContent = `[FETCH FAILED] Network error trying to reach: ${url}`;
+        consoleDiv.appendChild(entry);
+        consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        throw error;
+      }
+    };
+  })();
+</script>
     <meta charset="utf-8" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
