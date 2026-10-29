@@ -2,6 +2,74 @@
 <html lang="en-us">
 
   <head>
+	  <div id="custom-screen-console"><strong>On-Screen Console (Waiting for logs...)</strong><br></div>
+
+<script>
+  (function() {
+    const consoleDiv = document.getElementById('custom-screen-console');
+
+    function appendToScreenConsole(message, type) {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry ' + type;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      consoleDiv.appendChild(entry);
+      consoleDiv.scrollTop = consoleDiv.scrollHeight; // Auto-scrolls to the newest log
+    }
+
+    // Intercept standard console outputs
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalWarn = console.warn;
+
+    console.log = function(...args) {
+      originalLog.apply(console, args);
+      appendToScreenConsole(args.join(' '), 'log-info');
+    };
+
+    console.error = function(...args) {
+      originalError.apply(console, args);
+      appendToScreenConsole(args.join(' '), 'log-error');
+    };
+
+    console.warn = function(...args) {
+      originalWarn.apply(console, args);
+      appendToScreenConsole(args.join(' '), 'log-warn');
+    };
+
+    // Catch unhandled errors that completely crash scripts (like 404s or syntax errors)
+    window.addEventListener('error', function(event) {
+      appendToScreenConsole(`${event.message} at ${event.filename}:${event.lineno}`, 'log-error');
+    });
+
+    // Catch unhandled Promise rejections (like failed network/fetch fetches)
+    window.addEventListener('unhandledrejection', function(event) {
+      appendToScreenConsole(`Unhandled Promise Rejection: ${event.reason}`, 'log-error');
+    });
+  })();
+</script>
+	  <style>
+  #custom-screen-console {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    width: 400px;
+    height: 250px;
+    background: rgba(0, 0, 0, 0.85);
+    color: #00ff00;
+    font-family: monospace;
+    font-size: 11px;
+    padding: 10px;
+    border-radius: 5px;
+    overflow-y: auto;
+    z-index: 99999;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    border: 1px solid #333;
+    pointer-events: auto;
+  }
+  .log-entry { margin-bottom: 4px; border-bottom: 1px solid #222; padding-bottom: 2px; white-space: pre-wrap; }
+  .log-error { color: #ff5555; font-weight: bold; }
+  .log-warn { color: #ffaa00; }
+</style>
     <meta charset="utf-8" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
