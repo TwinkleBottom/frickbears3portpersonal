@@ -2,52 +2,72 @@
 <html lang="en-us">
 
   <head>
-	  <div id="custom-screen-console"><strong>On-Screen Console (Waiting for logs...)</strong><br></div>
+<div id="custom-screen-console"><strong>On-Screen Console (Waiting for logs...)</strong><br></div>
 
 <script>
   (function() {
     const consoleDiv = document.getElementById('custom-screen-console');
+    if (!consoleDiv) return;
 
-    function appendToScreenConsole(message, type) {
+    function appendToScreenConsole(message, type = 'log-info') {
       const entry = document.createElement('div');
       entry.className = 'log-entry ' + type;
       entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
       consoleDiv.appendChild(entry);
-      consoleDiv.scrollTop = consoleDiv.scrollHeight; // Auto-scrolls to the newest log
+      consoleDiv.scrollTop = consoleDiv.scrollHeight;
     }
 
-    // Intercept standard console outputs
     const originalLog = console.log;
     const originalError = console.error;
     const originalWarn = console.warn;
 
     console.log = function(...args) {
       originalLog.apply(console, args);
-      appendToScreenConsole(args.join(' '), 'log-info');
+      appendToScreenConsole(args.map(String).join(' '), 'log-info');
     };
 
     console.error = function(...args) {
       originalError.apply(console, args);
-      appendToScreenConsole(args.join(' '), 'log-error');
+      appendToScreenConsole(args.map(String).join(' '), 'log-error');
     };
 
     console.warn = function(...args) {
       originalWarn.apply(console, args);
-      appendToScreenConsole(args.join(' '), 'log-warn');
+      appendToScreenConsole(args.map(String).join(' '), 'log-warn');
     };
 
-    // Catch unhandled errors that completely crash scripts (like 404s or syntax errors)
     window.addEventListener('error', function(event) {
-      appendToScreenConsole(`${event.message} at ${event.filename}:${event.lineno}`, 'log-error');
+      appendToScreenConsole(`${event.message} at ${event.filename || 'unknown'}:${event.lineno || 0}`, 'log-error');
     });
 
-    // Catch unhandled Promise rejections (like failed network/fetch fetches)
     window.addEventListener('unhandledrejection', function(event) {
-      appendToScreenConsole(`Unhandled Promise Rejection: ${event.reason}`, 'log-error');
+      appendToScreenConsole(`Unhandled Promise Rejection: ${String(event.reason)}`, 'log-error');
     });
+
+    const originalFetch = window.fetch;
+    window.fetch = function(input, init) {
+      const url = typeof input === 'string'
+        ? input
+        : input && input.url
+          ? input.url
+          : String(input);
+
+      return originalFetch.call(this, input, init)
+        .then((response) => {
+          if (response && !response.ok) {
+            appendToScreenConsole(`HTTP ${response.status} while fetching ${url}`, 'log-warn');
+          }
+          return response;
+        })
+        .catch((error) => {
+          appendToScreenConsole(`Fetch failed for ${url}: ${error && error.message ? error.message : String(error)}`, 'log-error');
+          throw error;
+        });
+    };
   })();
 </script>
-	  <style>
+
+<style>
   #custom-screen-console {
     position: fixed;
     bottom: 10px;
@@ -62,13 +82,30 @@
     border-radius: 5px;
     overflow-y: auto;
     z-index: 99999;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    box-shadow: 0 0 10px rgba(0,0,0, 0.5);
     border: 1px solid #333;
     pointer-events: auto;
   }
-  .log-entry { margin-bottom: 4px; border-bottom: 1px solid #222; padding-bottom: 2px; white-space: pre-wrap; }
-  .log-error { color: #ff5555; font-weight: bold; }
-  .log-warn { color: #ffaa00; }
+
+  .log-entry {
+    margin-bottom: 4px;
+    border-bottom: 1px solid #222;
+    padding-bottom: 2px;
+    white-space: pre-wrap;
+  }
+
+  .log-error {
+    color: #ff5555;
+    font-weight: bold;
+  }
+
+  .log-warn {
+    color: #ffaa00;
+  }
+
+  #progress {
+    display: block !important;
+  }
 </style>
 	  	  <script>
   (function() {
