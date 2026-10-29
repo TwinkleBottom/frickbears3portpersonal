@@ -45,25 +45,27 @@
     });
 
     const originalFetch = window.fetch;
-    window.fetch = function(input, init) {
-      const url = typeof input === 'string'
-        ? input
-        : input && input.url
-          ? input.url
-          : String(input);
+    if (originalFetch) {
+      window.fetch = function(input, init) {
+        const url = typeof input === 'string'
+          ? input
+          : input && input.url
+            ? input.url
+            : String(input);
 
-      return originalFetch.call(this, input, init)
-        .then((response) => {
-          if (response && !response.ok) {
-            appendToScreenConsole(`HTTP ${response.status} while fetching ${url}`, 'log-warn');
-          }
-          return response;
-        })
-        .catch((error) => {
-          appendToScreenConsole(`Fetch failed for ${url}: ${error && error.message ? error.message : String(error)}`, 'log-error');
-          throw error;
-        });
-    };
+        return originalFetch.call(this, input, init)
+          .then((response) => {
+            if (response && !response.ok && /(raw\.githubusercontent|game\.unx|music\.dat|voicelines|assets)/i.test(url)) {
+              appendToScreenConsole(`HTTP ${response.status} for ${url}`, 'log-warn');
+            }
+            return response;
+          })
+          .catch((error) => {
+            appendToScreenConsole(`Fetch failed for ${url}: ${error && error.message ? error.message : String(error)}`, 'log-error');
+            throw error;
+          });
+      };
+    }
   })();
 </script>
 
@@ -82,7 +84,7 @@
     border-radius: 5px;
     overflow-y: auto;
     z-index: 99999;
-    box-shadow: 0 0 10px rgba(0,0,0, 0.5);
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
     border: 1px solid #333;
     pointer-events: auto;
   }
@@ -107,27 +109,6 @@
     display: block !important;
   }
 </style>
-	  	  <script>
-  (function() {
-    const consoleDiv = document.getElementById('custom-screen-console');
-    const originalFetch = window.fetch;
-    
-    window.fetch = async function(...args) {
-      const url = args[0];
-      try {
-        const response = await originalFetch.apply(this, args);
-        return response;
-      } catch (error) {
-        const entry = document.createElement('div');
-        entry.className = 'log-entry log-error';
-        entry.textContent = `[FETCH FAILED] Network error trying to reach: ${url}`;
-        consoleDiv.appendChild(entry);
-        consoleDiv.scrollTop = consoleDiv.scrollHeight;
-        throw error;
-      }
-    };
-  })();
-</script>
     <meta charset="utf-8" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
@@ -745,18 +726,6 @@
       <div id="messages">
       </div>
     </div>
-
-   <script async
-     data-ad-client="ca-pub-123"
-     data-ad-frequency-hint="30s"
-     data-adbreak-test="on"
-     src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js">
-   </script>
-
-   <script>
-     window.adsbygoogle = window.adsbygoogle || [];
-     const adBreak =  adConfig = function(o) {adsbygoogle.push(o);}
-   </script>
 
     <script id="tick-worker" type="javascript/worker">
       let running = false;
@@ -2189,7 +2158,7 @@
         wallpaper_update_config(JSON.stringify(wallpaperConfig));
       }
     </script>
-	    <script async type="text/javascript" src="https://cdn.jsdelivr.net/gh/reeyuki/frickbears3port@4e185a27651d1d331a2e37f40f3d4e7a431b5b03/runner.js"></script>
+	    <script async type="text/javascript" src="https://raw.githubusercontent.com/TwinkleBottom/frickbears3portpersonal/main/runner.js"></script>
 
     <!-- Custom BodyEnd code is injected here -->
     
